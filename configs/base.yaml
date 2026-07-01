@@ -1,0 +1,92 @@
+# Base configuration for EGSPO-CA v2 experiments
+# All paths are relative to the code/ directory
+
+# Model
+model:
+  name: "Qwen/Qwen2.5-7B-Instruct"
+  trust_remote_code: true
+  torch_dtype: "bfloat16"
+  use_flash_attention: true
+
+# Training
+training:
+  output_dir: "../results/phase1"
+  num_train_epochs: 3
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8
+  learning_rate: 5.0e-6
+  warmup_ratio: 0.05
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  save_steps: 500
+  save_total_limit: 3
+  logging_steps: 10
+  eval_steps: 500
+  eval_strategy: "steps"
+
+# GRPO / EGSPO-CA common
+grpo:
+  K: 8                      # rollout group size
+  L: 32                     # local window size
+  clip_epsilon: 0.2
+  max_new_tokens: 512
+  temperature: 0.7
+  top_p: 0.95
+
+# T-BICC (Truncated-BICC)
+tbicc:
+  delta: 8                  # initial truncation window
+  adaptive_delta: true       # enable Theorem 4 adaptive truncation
+  s0: 0.5                   # similarity threshold
+  eta: 0.5                   # dual-channel weight (lexical vs semantic)
+  lambda_ema: 0.9           # EMA smoothing
+  k_min: 2                   # min divergent rollouts
+  divergence_kernel: "l1"     # |a - b| for binary, normalized for continuous
+
+# Dual gating
+gating:
+  beta: 0.6                  # multiplicative weight
+  gamma: 0.1                 # additive floor
+
+# Value head
+value_head:
+  hidden_dim: 1024
+  dropout: 0.1
+  warmup_steps: 200
+  r2_threshold: 0.6
+  loss_weight: 1.0
+
+# Data
+data:
+  train_path: "data/numina_cot.jsonl"
+  eval_path: "data/math500.jsonl"
+  max_prompt_length: 256
+  max_response_length: 512
+  num_train_samples: 7500
+
+# Evaluation
+eval:
+  benchmarks:
+    - "MATH-500"
+    - "AIME24"
+    - "AIME25"
+    - "GSM8K"
+    - "OlympiadBench"
+    - "Minerva-Math"
+  num_samples: 4
+  temperature: 0.6
+  top_p: 0.95
+
+# Seeds
+seeds:
+  - 42
+  - 123
+  # - 1337
+  # - 2024
+  # - 31415
+
+# Logging
+logging:
+  level: "INFO"
+  wandb: false
+  wandb_project: "egspo_ca"
